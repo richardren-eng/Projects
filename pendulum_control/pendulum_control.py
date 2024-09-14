@@ -1,3 +1,6 @@
+#Richard Ren
+#September 14, 2024
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
