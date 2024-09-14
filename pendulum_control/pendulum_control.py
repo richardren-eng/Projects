@@ -33,7 +33,12 @@ class PendulumAnimation:
         self.theta_dot = [self.theta_dot0]
         self.x_coord = [self.theta2xy_inertial(self.theta0)[0]]
         self.y_coord = [self.theta2xy_inertial(self.theta0)[1]]
+
+        self.noise = -3
+        self.theta_measured = [self.theta0 + np.random.uniform(-self.noise, self.noise)]
+        
         self.current_time = 0
+        self.time = [self.current_time]
         
         # PID controller state
         self.integral = 0
@@ -70,8 +75,9 @@ class PendulumAnimation:
     
     def update_state_with_pid(self):
         # Simulate measurement noise
-        noise = np.random.normal(np.deg2rad(5), np.deg2rad(5))  # Standard deviation of 5 degrees
+        noise = np.random.normal(np.deg2rad(-3), np.deg2rad(3))  
         theta_measured = self.theta[-1] + noise
+        self.theta_measured.append(theta_measured)
         
         # Normalize measured angle
         theta_measured = self.normalize_angle(theta_measured)
@@ -79,10 +85,13 @@ class PendulumAnimation:
         # PID control
         error = self.setpoint - self.theta[-1]  # Use theta in radians for PID
         
+        #Initiate PID controller for i = 0
         if self.pid_init:
             derivative = 0
             self.integral = 0
             self.pid_init = False
+
+        #Main control law for i > 0
         else:
             self.integral += 0.5 * self.dt * (error + self.previous_error)
             derivative = (error - self.previous_error) / self.dt
@@ -164,6 +173,7 @@ class PendulumAnimation:
         
         # Update time text
         self.current_time += self.dt
+        self.time.append(self.current_time)
         self.time_text.set_text(self.time_template % self.current_time)
         
         # Update measured theta text less frequently
@@ -199,6 +209,22 @@ class PendulumAnimation:
 def main():
     pendulum_animation = PendulumAnimation()
     pendulum_animation.show()
+    
+    #Plot the theta vs time
+    plt.plot(pendulum_animation.time , np.rad2deg(pendulum_animation.theta_measured), 'b-', label='measured' )
+    plt.plot(pendulum_animation.time , np.rad2deg(pendulum_animation.theta), 'r-', label='actual')
+    plt.axhline(np.rad2deg(pendulum_animation.setpoint), color='g', linestyle='--', label='Setpoint')  # Green dashed line
+
+    plt.legend(loc='upper right')
+
+    plt.title('Pendulum Trajectory Over Control Life')
+    plt.xlabel('Time (sec)')
+    plt.ylabel('Theta (deg)')
+
+    plt.xlim(left=0 , right=max(pendulum_animation.time))
+
+    plt.show()
+
 
 if __name__ == '__main__':
     main()
