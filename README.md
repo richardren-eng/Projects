@@ -1,1 +1,1 @@
-Projects of my "free time."
+Projects and WIPs during my free time.
